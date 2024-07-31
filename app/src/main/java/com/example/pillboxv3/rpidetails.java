@@ -89,26 +89,6 @@ public class rpidetails extends AppCompatActivity {
     public void goBackToMain(View v)
     {
         transmitSettingsToServer();
-
-        if(connectionFlag == 1)
-        {
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putString("ip" , ipTV.getText().toString());
-            editor.putString("email" , emailTV.getText().toString());
-            editor.putString("volume" , volumeTV.getText().toString());
-            editor.putString("notification" , notTV.getText().toString());
-            editor.putString("med1" , slot1TV.getText().toString());
-            editor.putString("med2" , slot2TV.getText().toString());
-            editor.putString("med3" , slot3TV.getText().toString());
-            editor.putString("med4" , slot4TV.getText().toString());
-            editor.apply();
-
-            Toast.makeText(rpidetails.this,"Changes Saved",Toast.LENGTH_SHORT).show();
-        }
-        else
-        {
-            Toast.makeText(rpidetails.this,"Device is offline, changes were not saved.",Toast.LENGTH_SHORT).show();
-        }
         Intent back = new Intent(this, MainActivity.class);
 
         startActivity(back);
@@ -133,6 +113,34 @@ public class rpidetails extends AppCompatActivity {
                 {
                     connectionFlag = 0;
                     e.printStackTrace();
+                }
+                if(connectionFlag == 1)
+                {
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putString("ip" , ipTV.getText().toString());
+                    editor.putString("email" , emailTV.getText().toString());
+                    editor.putString("volume" , volumeTV.getText().toString());
+                    editor.putString("notification" , notTV.getText().toString());
+                    editor.putString("med1" , slot1TV.getText().toString());
+                    editor.putString("med2" , slot2TV.getText().toString());
+                    editor.putString("med3" , slot3TV.getText().toString());
+                    editor.putString("med4" , slot4TV.getText().toString());
+                    editor.apply();
+                    rpidetails.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(rpidetails.this,"Changes Saved",Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+                else
+                {
+                    rpidetails.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(rpidetails.this,"Device is offline, changes were not saved.",Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 }
             }
         }).start();

@@ -2,6 +2,7 @@ package com.example.pillboxv3;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
@@ -205,45 +206,40 @@ public class timestampMarkingActivity extends AppCompatActivity {
             @Override
             public void onTimeSet(TimePicker view, int hourOfDay, int minute)
             {
+                timestampsArray[numberOfTimeStamp].setDay(todayNumber);
+                timestampsArray[numberOfTimeStamp].setHour(hourOfDay);
+                Log.d("check " , String.valueOf(timestampsArray[numberOfTimeStamp].getMinute()));
+                timestampsArray[numberOfTimeStamp].setMinute(minute);
+                String toDisplay = timestampsArray[numberOfTimeStamp].getHour() + ":" + timestampsArray[numberOfTimeStamp].getMinute() + getTodaysMed(timestampsArray[numberOfTimeStamp].getMedication());
+                removeButtons[numberOfTimeStamp].setVisibility(View.VISIBLE);
+                setButtons[numberOfTimeStamp].setVisibility(View.GONE);
+                arrayOfTextviews[numberOfTimeStamp].setText(toDisplay);
 
+                Log.d("he" , "this happened1");
 
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
+                        pillboxdatabase.getTimestampDAO().addTimeStamp(timestampsArray[numberOfTimeStamp]);
+                        timestampsArray[numberOfTimeStamp] = pillboxdatabase.getTimestampDAO().getAllTimestamps().get(pillboxdatabase.getTimestampDAO().getAllTimestamps().size()-1);
+                        CMD = "1" + "x" + timestampsArray[numberOfTimeStamp].getDay() + "x" + timestampsArray[numberOfTimeStamp].getHour() + "x" + timestampsArray[numberOfTimeStamp].getMinute() + "x" + timestampsArray[numberOfTimeStamp].getMedication();
+                        Log.d("he" , "this happened2");
                         try {
                             Socket socket = new Socket(deviceIP,devicePort);
                             PrintWriter dataToRPi = new PrintWriter(socket.getOutputStream());
-                            CMD = "1" + "x" + timestampsArray[numberOfTimeStamp].getDay() + "x" + timestampsArray[numberOfTimeStamp].getHour() + "x" + timestampsArray[numberOfTimeStamp].getMinute() + "x" + timestampsArray[numberOfTimeStamp].getMedication();
                             dataToRPi.write(CMD);
                             dataToRPi.flush();
                             dataToRPi.close();
                             socket.close();
-                            timestampsArray[numberOfTimeStamp].setDay(todayNumber);
-                            timestampsArray[numberOfTimeStamp].setHour(hourOfDay);
-                            Log.d("check " , String.valueOf(timestampsArray[numberOfTimeStamp].getMinute()));
-                            timestampsArray[numberOfTimeStamp].setMinute(minute);
-                            String toDisplay = timestampsArray[numberOfTimeStamp].getHour() + ":" + timestampsArray[numberOfTimeStamp].getMinute() + getTodaysMed(timestampsArray[numberOfTimeStamp].getMedication());
-                            removeButtons[numberOfTimeStamp].setVisibility(View.VISIBLE);
-                            setButtons[numberOfTimeStamp].setVisibility(View.GONE);
-                            arrayOfTextviews[numberOfTimeStamp].setText(toDisplay);
-                            pillboxdatabase.getTimestampDAO().addTimeStamp(timestampsArray[numberOfTimeStamp]);
-                            timestampsArray[numberOfTimeStamp] = pillboxdatabase.getTimestampDAO().getAllTimestamps().get(pillboxdatabase.getTimestampDAO().getAllTimestamps().size()-1);
                             connectionFlag = 1;
                         }catch (IOException e)
                         {
-                            e.printStackTrace();
                             connectionFlag = 0;
+                            e.printStackTrace();
                         }
                     }
                 }).start();
-                if(connectionFlag == 1)
-                {
-                    Toast.makeText(timestampMarkingActivity.this, "Timestamp added!" , Toast.LENGTH_SHORT).show();
-                }
-                else
-                {
-                    Toast.makeText(timestampMarkingActivity.this, "Device is offline, changes not saved", Toast.LENGTH_SHORT).show();
-                }
+
 
             }
         }, 15, 0, true);
@@ -277,9 +273,15 @@ public class timestampMarkingActivity extends AppCompatActivity {
 
     public void removeTimeStamp(int tsNumber)
     {
+        setButtons[tsNumber - 1].setVisibility(View.VISIBLE);
+        removeButtons[tsNumber - 1].setVisibility(View.GONE);
+        arrayOfTextviews[tsNumber - 1].setText(noTimestamp);
+        Toast.makeText(timestampMarkingActivity.this,"Timestamp removed." , Toast.LENGTH_SHORT).show();
         new Thread(new Runnable() {
             @Override
             public void run() {
+                pillboxdatabase.getTimestampDAO().deleteTimeStamp(timestampsArray[tsNumber-1]);
+
                 try {
                     Socket socket = new Socket(deviceIP,devicePort);
                     PrintWriter dataToRPi = new PrintWriter(socket.getOutputStream());
@@ -288,30 +290,14 @@ public class timestampMarkingActivity extends AppCompatActivity {
                     dataToRPi.flush();
                     dataToRPi.close();
                     socket.close();
-                    setButtons[tsNumber - 1].setVisibility(View.VISIBLE);
-                    removeButtons[tsNumber - 1].setVisibility(View.GONE);
-                    arrayOfTextviews[tsNumber - 1].setText(noTimestamp);
-                    pillboxdatabase.getTimestampDAO().deleteTimeStamp(timestampsArray[tsNumber-1]);
-                    connectionFlag = 1;
-                }catch (IOException e)
-                {
-                    e.printStackTrace();
-                    connectionFlag = 0;
-                }
+                }catch (IOException e){e.printStackTrace();}
             }
         }).start();
-        if(connectionFlag == 1)
-        {
-            Toast.makeText(timestampMarkingActivity.this,"Timestamp removed." , Toast.LENGTH_SHORT).show();
-        }
-        else
-        {
-            Toast.makeText(timestampMarkingActivity.this,"Device offline, changes were not saved." , Toast.LENGTH_SHORT).show();
-        }
     }
 
     public void setInitialTimestampsOnCreate()
     {
+
         switch (today)
         {
             case "Sunday":
@@ -360,6 +346,34 @@ public class timestampMarkingActivity extends AppCompatActivity {
                         setButtons[i].setVisibility(View.GONE);
                         removeButtons[i].setVisibility(View.VISIBLE);
                     }
+                }
+                try {
+                    Socket socket = new Socket(deviceIP,devicePort);
+                    PrintWriter dataToRPi = new PrintWriter(socket.getOutputStream());
+                    dataToRPi.write("ping");
+                    dataToRPi.flush();
+                    dataToRPi.close();
+                    socket.close();
+                    connectionFlag = 1;
+                }catch (IOException e)
+                {
+                    connectionFlag = 0;
+                    e.printStackTrace();
+                }
+                if(connectionFlag == 0)
+                {
+                    int size = arrayOfTextviews.length;
+                    for(int i = 0; i < size; i++)
+                    {
+                        setButtons[i].setVisibility(View.GONE);
+                        removeButtons[i].setVisibility(View.GONE);
+                    }
+                    timestampMarkingActivity.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(timestampMarkingActivity.this, "Device is offline", Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 }
             }
         }).start();
