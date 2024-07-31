@@ -60,7 +60,7 @@
         android:id="@+id/audioVolume"
         android:layout_width="365dp"
         android:layout_height="55dp"
-        android:hint="Audio volume (0 - 127):"
+        android:hint="Audio volume (0 - 10):"
         android:inputType="number|numberDecimal|numberSigned"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

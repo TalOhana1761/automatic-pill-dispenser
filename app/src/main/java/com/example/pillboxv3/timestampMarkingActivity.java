@@ -362,16 +362,16 @@ public class timestampMarkingActivity extends AppCompatActivity {
                 }
                 if(connectionFlag == 0)
                 {
-                    int size = arrayOfTextviews.length;
-                    for(int i = 0; i < size; i++)
-                    {
-                        setButtons[i].setVisibility(View.GONE);
-                        removeButtons[i].setVisibility(View.GONE);
-                    }
                     timestampMarkingActivity.this.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(timestampMarkingActivity.this, "Device is offline", Toast.LENGTH_SHORT).show();
+                            int size = arrayOfTextviews.length;
+                            for(int i = 0; i < size; i++)
+                            {
+                                setButtons[i].setVisibility(View.GONE);
+                                removeButtons[i].setVisibility(View.GONE);
+                            }
+                            //oast.makeText(timestampMarkingActivity.this, "Device is offline", Toast.LENGTH_SHORT).show();
                         }
                     });
                 }

@@ -151,14 +151,6 @@ public class MainActivity extends AppCompatActivity {
                 sendCMDtoRPi();
                 Log.d("dispense" , "will send cmd: " +  CMD);
                 otherMedCheck = 0;
-                if(connectionFlag == 1)
-                {
-                    Toast.makeText(MainActivity.this, "Medications dispensed successfully", Toast.LENGTH_SHORT).show();
-                }
-                else
-                {
-                    Toast.makeText(MainActivity.this, "PillBox is offline, dispense declined.", Toast.LENGTH_SHORT).show();
-                }
             }
         });
         builder.create();
@@ -186,6 +178,12 @@ public class MainActivity extends AppCompatActivity {
                     dataToRPi.flush();
                     dataToRPi.close();
                     socket.close();
+                    MainActivity.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(MainActivity.this, "Medications dispensed successfully", Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 }catch (IOException e)
                 {
                     connectionFlag = 0;

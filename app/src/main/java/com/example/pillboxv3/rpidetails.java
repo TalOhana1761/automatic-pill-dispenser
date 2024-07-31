@@ -18,6 +18,7 @@ import org.w3c.dom.Text;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.NoRouteToHostException;
 import java.net.Socket;
 
 public class rpidetails extends AppCompatActivity {
@@ -109,13 +110,22 @@ public class rpidetails extends AppCompatActivity {
                     dataToRPi.close();
                     socket.close();
                     connectionFlag = 1;
+                    Log.d(" hello" , "this still happenes");
                 }catch (IOException e)
                 {
                     connectionFlag = 0;
+                    Log.d("haha" , "exception happened...");
                     e.printStackTrace();
+                    rpidetails.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(rpidetails.this,"Device is offline, changes were not saved.",Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 }
                 if(connectionFlag == 1)
                 {
+                    Log.d("hhaha" , "connection is 1");
                     SharedPreferences.Editor editor = prefs.edit();
                     editor.putString("ip" , ipTV.getText().toString());
                     editor.putString("email" , emailTV.getText().toString());
@@ -130,15 +140,6 @@ public class rpidetails extends AppCompatActivity {
                         @Override
                         public void run() {
                             Toast.makeText(rpidetails.this,"Changes Saved",Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                }
-                else
-                {
-                    rpidetails.this.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(rpidetails.this,"Device is offline, changes were not saved.",Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
