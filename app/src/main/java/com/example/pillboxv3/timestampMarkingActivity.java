@@ -66,6 +66,7 @@ public class timestampMarkingActivity extends AppCompatActivity {
     public int otherMedCheck;
     public List<String> slotNumbersBeforeArray;
     public String[] medNamesBeforeRemovingBlanks;
+    public int connectionFlag = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -204,35 +205,46 @@ public class timestampMarkingActivity extends AppCompatActivity {
             @Override
             public void onTimeSet(TimePicker view, int hourOfDay, int minute)
             {
-                timestampsArray[numberOfTimeStamp].setDay(todayNumber);
-                timestampsArray[numberOfTimeStamp].setHour(hourOfDay);
-                Log.d("check " , String.valueOf(timestampsArray[numberOfTimeStamp].getMinute()));
-                timestampsArray[numberOfTimeStamp].setMinute(minute);
-                String toDisplay = timestampsArray[numberOfTimeStamp].getHour() + ":" + timestampsArray[numberOfTimeStamp].getMinute() + getTodaysMed(timestampsArray[numberOfTimeStamp].getMedication());
-                removeButtons[numberOfTimeStamp].setVisibility(View.VISIBLE);
-                setButtons[numberOfTimeStamp].setVisibility(View.GONE);
-                arrayOfTextviews[numberOfTimeStamp].setText(toDisplay);
-                Log.d("he" , "this happened1");
+
 
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        pillboxdatabase.getTimestampDAO().addTimeStamp(timestampsArray[numberOfTimeStamp]);
-                        timestampsArray[numberOfTimeStamp] = pillboxdatabase.getTimestampDAO().getAllTimestamps().get(pillboxdatabase.getTimestampDAO().getAllTimestamps().size()-1);
-                        CMD = "1" + "x" + timestampsArray[numberOfTimeStamp].getDay() + "x" + timestampsArray[numberOfTimeStamp].getHour() + "x" + timestampsArray[numberOfTimeStamp].getMinute() + "x" + timestampsArray[numberOfTimeStamp].getMedication();
-                        Log.d("he" , "this happened2");
                         try {
                             Socket socket = new Socket(deviceIP,devicePort);
                             PrintWriter dataToRPi = new PrintWriter(socket.getOutputStream());
+                            CMD = "1" + "x" + timestampsArray[numberOfTimeStamp].getDay() + "x" + timestampsArray[numberOfTimeStamp].getHour() + "x" + timestampsArray[numberOfTimeStamp].getMinute() + "x" + timestampsArray[numberOfTimeStamp].getMedication();
                             dataToRPi.write(CMD);
                             dataToRPi.flush();
                             dataToRPi.close();
                             socket.close();
-                        }catch (IOException e){e.printStackTrace();}
+                            timestampsArray[numberOfTimeStamp].setDay(todayNumber);
+                            timestampsArray[numberOfTimeStamp].setHour(hourOfDay);
+                            Log.d("check " , String.valueOf(timestampsArray[numberOfTimeStamp].getMinute()));
+                            timestampsArray[numberOfTimeStamp].setMinute(minute);
+                            String toDisplay = timestampsArray[numberOfTimeStamp].getHour() + ":" + timestampsArray[numberOfTimeStamp].getMinute() + getTodaysMed(timestampsArray[numberOfTimeStamp].getMedication());
+                            removeButtons[numberOfTimeStamp].setVisibility(View.VISIBLE);
+                            setButtons[numberOfTimeStamp].setVisibility(View.GONE);
+                            arrayOfTextviews[numberOfTimeStamp].setText(toDisplay);
+                            pillboxdatabase.getTimestampDAO().addTimeStamp(timestampsArray[numberOfTimeStamp]);
+                            timestampsArray[numberOfTimeStamp] = pillboxdatabase.getTimestampDAO().getAllTimestamps().get(pillboxdatabase.getTimestampDAO().getAllTimestamps().size()-1);
+                            connectionFlag = 1;
+                        }catch (IOException e)
+                        {
+                            e.printStackTrace();
+                            connectionFlag = 0;
+                        }
                     }
                 }).start();
+                if(connectionFlag == 1)
+                {
+                    Toast.makeText(timestampMarkingActivity.this, "Timestamp added!" , Toast.LENGTH_SHORT).show();
+                }
+                else
+                {
+                    Toast.makeText(timestampMarkingActivity.this, "Device is offline, changes not saved", Toast.LENGTH_SHORT).show();
+                }
 
-                Toast.makeText(timestampMarkingActivity.this, "Timestamp added!" , Toast.LENGTH_SHORT).show();
             }
         }, 15, 0, true);
 
@@ -245,9 +257,6 @@ public class timestampMarkingActivity extends AppCompatActivity {
                 if(isChecked)
                 {
                     otherMedCheck += Integer.parseInt(slotNumbers[which]) * (int)Math.pow(10,which);
-//                    Log.d("check timestampMedPickingDialog" , "which is: " + String.valueOf(which));
-//                    Log.d("check timestampMedPickingDialog" , "isChecked is: " + String.valueOf(isChecked));
-//                    Log.d("check timestampMedPickingDialog" , "otherMedCheck is: " + String.valueOf(otherMedCheck));
                 }
                 else {
                     otherMedCheck -= Integer.parseInt(slotNumbers[which]) * (int)Math.pow(10,which);
@@ -268,34 +277,41 @@ public class timestampMarkingActivity extends AppCompatActivity {
 
     public void removeTimeStamp(int tsNumber)
     {
-        setButtons[tsNumber - 1].setVisibility(View.VISIBLE);
-        removeButtons[tsNumber - 1].setVisibility(View.GONE);
-        arrayOfTextviews[tsNumber - 1].setText(noTimestamp);
-        Toast.makeText(timestampMarkingActivity.this,"Timestamp removed." , Toast.LENGTH_SHORT).show();
         new Thread(new Runnable() {
             @Override
             public void run() {
-                pillboxdatabase.getTimestampDAO().deleteTimeStamp(timestampsArray[tsNumber-1]);
-//                Log.d("check timestampRemove" , String.valueOf(timestampsArray[tsNumber-1].getId()));
-//                Log.d("check timestampRemove" , String.valueOf(timestampsArray[tsNumber-1].getMedication()));
-//                Log.d("check timestampRemove" , String.valueOf(timestampsArray[tsNumber-1].getHour()));
-//                Log.d("check timestampRemove" , String.valueOf(timestampsArray[tsNumber-1].getMinute()));
-                CMD = "2" + "x" + timestampsArray[tsNumber-1].getDay() + "x" + timestampsArray[tsNumber-1].getHour() + "x" + timestampsArray[tsNumber-1].getMinute() + "x" + timestampsArray[tsNumber-1].getMedication();
                 try {
                     Socket socket = new Socket(deviceIP,devicePort);
                     PrintWriter dataToRPi = new PrintWriter(socket.getOutputStream());
+                    CMD = "2" + "x" + timestampsArray[tsNumber-1].getDay() + "x" + timestampsArray[tsNumber-1].getHour() + "x" + timestampsArray[tsNumber-1].getMinute() + "x" + timestampsArray[tsNumber-1].getMedication();
                     dataToRPi.write(CMD);
                     dataToRPi.flush();
                     dataToRPi.close();
                     socket.close();
-                }catch (IOException e){e.printStackTrace();}
+                    setButtons[tsNumber - 1].setVisibility(View.VISIBLE);
+                    removeButtons[tsNumber - 1].setVisibility(View.GONE);
+                    arrayOfTextviews[tsNumber - 1].setText(noTimestamp);
+                    pillboxdatabase.getTimestampDAO().deleteTimeStamp(timestampsArray[tsNumber-1]);
+                    connectionFlag = 1;
+                }catch (IOException e)
+                {
+                    e.printStackTrace();
+                    connectionFlag = 0;
+                }
             }
         }).start();
+        if(connectionFlag == 1)
+        {
+            Toast.makeText(timestampMarkingActivity.this,"Timestamp removed." , Toast.LENGTH_SHORT).show();
+        }
+        else
+        {
+            Toast.makeText(timestampMarkingActivity.this,"Device offline, changes were not saved." , Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void setInitialTimestampsOnCreate()
     {
-
         switch (today)
         {
             case "Sunday":

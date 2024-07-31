@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     public static int devicePort = 21334;
     public static String deviceEmail;
     public static String CMD = "3x";
+    public int connectionFlag = 0;
 
     public timestampDatebase db;
     public TextView nextTimestamp;
@@ -150,7 +151,14 @@ public class MainActivity extends AppCompatActivity {
                 sendCMDtoRPi();
                 Log.d("dispense" , "will send cmd: " +  CMD);
                 otherMedCheck = 0;
-                Toast.makeText(MainActivity.this, "Medications dispensed successfully", Toast.LENGTH_SHORT).show();
+                if(connectionFlag == 1)
+                {
+                    Toast.makeText(MainActivity.this, "Medications dispensed successfully", Toast.LENGTH_SHORT).show();
+                }
+                else
+                {
+                    Toast.makeText(MainActivity.this, "PillBox is offline, dispense declined.", Toast.LENGTH_SHORT).show();
+                }
             }
         });
         builder.create();
@@ -178,8 +186,10 @@ public class MainActivity extends AppCompatActivity {
                     dataToRPi.flush();
                     dataToRPi.close();
                     socket.close();
-                    Log.d("check" , "CMD was sent");
-                }catch (IOException e){e.printStackTrace();}
+                }catch (IOException e)
+                {
+                    connectionFlag = 0;
+                }
             }
         }).start();
     }
@@ -194,12 +204,6 @@ public class MainActivity extends AppCompatActivity {
     {
         Intent dayPicking = new Intent(this, dayPicking.class);
         startActivity(dayPicking);
-    }
-
-    public void goToDyn(View v)
-    {
-        Intent dynPage = new Intent(this, dynActivity.class);
-        startActivity(dynPage);
     }
 
 }
